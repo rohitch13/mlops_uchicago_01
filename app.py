@@ -1,10 +1,12 @@
-from fastapi import FastAPI, UploadFile, Form, Request
+from fastapi import FastAPI, UploadFile, Form
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from transformers import ViltProcessor, ViltForQuestionAnswering
 from PIL import Image
 import io
 import requests
+from pyngrok import ngrok
+import nest_asyncio
+import uvicorn
 
 processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
 model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
@@ -22,30 +24,25 @@ def root():
     return """
     <html>
         <body>
-            <h2>ViLT VQA API is Running</h2>
-            <a href="/upload">Go to Upload Page</a>
+            <h2>ViLT VQA App</h2>
+            <a href="/upload">Go to Upload Page</a><br><br>
+            <a href="/demo">Run Demo</a>
         </body>
     </html>
     """
-
 
 @app.get("/upload", response_class=HTMLResponse)
 async def upload_form():
     return """
     <html>
         <body>
-            <h2>ViLT VQA App</h2>
+            <h2>Ask a Visual Question</h2>
             <form action="/ask" enctype="multipart/form-data" method="post">
                 <label>Question:</label><br>
                 <input type="text" name="text" value="What are the colors of the cats?" /><br><br>
                 <label>Upload Image:</label><br>
                 <input type="file" name="image" accept="image/*" /><br><br>
                 <input type="submit" value="Ask Question" />
-            </form>
-            <br>
-            <h3>Or use demo image:</h3>
-            <form action="/demo" method="get">
-                <input type="submit" value="Run Demo" />
             </form>
         </body>
     </html>
@@ -83,3 +80,11 @@ async def run_demo():
     </html>
     """
 
+if __name__ == "__main__":
+    nest_asyncio.apply()
+
+    ngrok.set_auth_token("2ymVZyQApjR0cCVOdx0DKdPUY5V_3N2QiauaKRcc2qcWJDkdN")
+    public_url = ngrok.connect(8000)
+    print("🔗 Public URL:", public_url)
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
