@@ -6,18 +6,15 @@ from PIL import Image
 import io
 import requests
 
-# Load model and processor
 processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
 model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
 
-# Inference pipeline
 def model_pipeline(text: str, image: Image.Image):
     encoding = processor(image, text, return_tensors="pt")
     outputs = model(**encoding)
     idx = outputs.logits.argmax(-1).item()
     return model.config.id2label[idx]
 
-# FastAPI app
 app = FastAPI()
 
 @app.get("/", response_class=HTMLResponse)
